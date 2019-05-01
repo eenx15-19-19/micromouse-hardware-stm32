@@ -9,10 +9,15 @@
 #define PI 3.141592
 #define GEARING (56.0/10.0)
 
+
+// Global
 extern int targetSpeedX;
 extern int targetSpeedW;
 extern float decX; 
 extern float decW;
+
+extern int frontSensorTreshhold;
+extern int frontSensor;
 
 // Needed for running in main
 extern float distanceLeft;

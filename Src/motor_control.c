@@ -7,13 +7,15 @@
 
 
 // Sensors
-int leftSensor;
-int rightSensor;
-int leftSensorMiddleValue;
-int rightSensorMiddleValue;
-int sensorError;
-float sensorFeedback;
-float sensorScale;
+int leftSensor = 0;
+int rightSensor = 0;
+int frontSensor = 0;
+int frontSensorTreshhold = 0;
+int leftSensorMiddleValue = 0;
+int rightSensorMiddleValue = 0;
+int sensorError = 0;
+float sensorFeedback = 0;;
+float sensorScale = 1;
 
 // Used for control loop
 int leftEncoder;
@@ -41,6 +43,7 @@ int targetSpeedX = 0;
 int targetSpeedW = 0;
 int encoderFeedbackX = 0;
 int encoderFeedbackW = 0;
+float rotationalFeedback = 0;
 float posErrorX = 0;
 float posErrorW = 0;
 float oldPosErrorX = 0;
@@ -49,8 +52,8 @@ int posPwmX = 0;
 int posPwmW = 0;
 float kpX = 2, kdX = 4;
 float kpW = 1, kdW = 12;//used in straight
-float accX = 300;// cm/s^2 => 0.1 m/s^2 
-float decX = 300; 
+float accX = 100;// cm/s^2 => 0.1 m/s^2 
+float decX = 100; 
 float accW = 1; //cm/s^2
 float decW = 1;
 
@@ -115,7 +118,7 @@ void getEncoderStatus(void)
 	encoderCount =  (leftEncoderCount+rightEncoderCount)/2.0;	
 	rotationCount = (rightEncoderCount - leftEncoderCount)/2.0;
 	
-	distanceLeft -= encoderChange;// update distanceLeft	
+	distanceLeft -= encoderChange;
 	rotationLeft -= rotationChange;
 }
 
@@ -153,14 +156,17 @@ void updateCurrentSpeed(void)
 void calculateMotorPwm(void) // encoder PD controller
 {	
 	
-    /* simple PD loop to generate base speed for both motors */	
+	// PD loop for translation and rotation to generate base speed for both motors
 	encoderFeedbackX = rightEncoderChange + leftEncoderChange;
 	encoderFeedbackW = rightEncoderChange - leftEncoderChange;	
+	 
+	//Have sensor error properly scale to fit the system
+	sensorFeedback = sensorError / sensorScale; 
 	
-	sensorFeedback = sensorError/sensorScale;//have sensor error properly scale to fit the system
+	rotationalFeedback = encoderFeedbackW + sensorFeedback;
 
 	posErrorX += curSpeedX - encoderFeedbackX;
-	posErrorW += curSpeedW - encoderFeedbackW;
+	posErrorW += curSpeedW - rotationalFeedback;
 	
 	posPwmX = kpX * posErrorX + kdX * (posErrorX - oldPosErrorX);
 	posPwmW = kpW * posErrorW + kdW * (posErrorW - oldPosErrorW);
@@ -188,7 +194,7 @@ int needToDecelerate(int32_t dist, int16_t curSpd, int16_t endSpd)//speed are in
 {
 	if (curSpd<0) curSpd = -curSpd;
 	if (endSpd<0) endSpd = -endSpd;
-	if (dist<0) dist = 1;//-dist;
+	if (dist<0) dist = 1;			//-dist;
 	if (dist == 0) dist = 1;  //prevent divide by 0
 
 	int a = countsToSpeed((curSpd*curSpd - endSpd*endSpd)*100/dist/4/2);

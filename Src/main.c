@@ -86,12 +86,10 @@ int moveSpeed;
 float battVoltage;
 
 int sensorValues[3];
-ADC_ChannelConfTypeDef sConfig;
+ADC_ChannelConfTypeDef sConfig; // IMPORTANT - Comment out the creation of sConfig in the ADC1_Init function in main, if not the sensors will NOT work.
 
 //Uses as a command array for moving in the maze
 char commands[8] = "fllf";
-
-
 
 /* USER CODE END PV */
 
@@ -164,9 +162,7 @@ int main(void)
 	
   motorSetup();
 	pwmSetup();
-	moveSpeed = speedToCounts(500*2);
-	
-	
+	moveSpeed = speedToCounts(300*2);
 	
   /* USER CODE END 2 */
 
@@ -177,31 +173,7 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-		
-		
-		
-		/*
-		sConfig.Channel = ADC_CHANNEL_9;
-		HAL_ADC_ConfigChannel(&hadc2, &sConfig);
-		HAL_ADC_Start(&hadc2);
-		while(HAL_ADC_PollForConversion(&hadc2, 50) != HAL_OK);
-		battVoltage = HAL_ADC_GetValue(&hadc2); //Battery Voltage
-		*/
-		
-		/*
-		sConfig.Channel = ADC_CHANNEL_9;
-		HAL_ADC_ConfigChannel(&hadc1, &sConfig);
-		HAL_ADC_Start(&hadc1);
-		while(HAL_ADC_PollForConversion(&hadc1, 50) != HAL_OK);
-		battVoltage = HAL_ADC_GetValue(&hadc1); //right
-		battVoltage = ((float)battVoltage / 4096) * 3.3 * (1000 + 470) / 470.0;
-		*/
-		HAL_Delay(50);
-		
-		
-		
-		
-		
+
 		//printf("Encoder speed: %.2f m/s --- Battery voltage: %.2f \n\r", countsToSpeed(encoderChange) / 1000, batteryVoltage() );
 		//HAL_Delay(500);
 		//Let the user know if the battery is running low.
@@ -702,8 +674,10 @@ static void MX_GPIO_Init(void)
 
 /* USER CODE BEGIN 4 */
 
-void moveForward(){
-	distanceLeft = 8 * oneCellDistance;
+void moveForward(void){
+	int nrOfCells = 1;
+	int totalDistance = nrOfCells * oneCellDistance;
+	distanceLeft = totalDistance;
 	targetSpeedW = 0;
 			
 	do{
@@ -712,10 +686,10 @@ void moveForward(){
 			targetSpeedX = moveSpeed;
 		else
 			targetSpeedX = 0;	
-		
-		//there is something else you can add here. Such as detecting falling edge of post to correct longitudinal position of mouse when running in a straight path
 	}
-	while( (encoderCount-oldEncoderCount) < (8 * oneCellDistance));
+	while( (encoderCount-oldEncoderCount) < (totalDistance));
+	// Add the following to stop with sensors instead of encoders when we get close to a front wall (the encoders can still stop the mouse)
+	// || frontSensor > frontSensorTreshhold
 	targetSpeedX = 0;	
 	
 	oldEncoderCount = encoderCount;
