@@ -5,15 +5,15 @@
 double value;
 char wall[3];
 double value_adc[3];
-double p[3]={8305.1, 8305.1, 8305.1};
-double q[3]={1.995, 1.995, 1.995};
+double p1[3]={-685.4, -89.66, 93.38};
+double p2[3]={11430.0, 875.0, 7481.0};
+double q1[3]={4.008, 2.18, 2.519};
 
-
-void equation(double p123[], double q123[], double arr[]){
+void equation(double p1[], double q1[], double p2[], double arr[]){
 	// get value of p1 and q1 from lineraisation from matlabs cftool, use rational with numerator degree=0, denominator degree=1. 
 	//the array is the array with measurment data from IR sensors(3 of them). 
 	for (int i=0; i<3; i++){
-		arr[i] = p123[i]/(arr[i]+q123[i]);
+		arr[i] = (p1[i]*arr[i]+p2[i])/(arr[i]+q1[i]);
 	}
 }
 
@@ -35,7 +35,7 @@ void wallDet(double raw_distance[], char walls[], ADC_HandleTypeDef hadc)
 {
 	// takes two arguments, the first a double array where the three sensors data is stored the second a char array where the walls are stored
 	sensorDist(raw_distance, hadc);
-	equation(p, q, raw_distance);
+	equation(p1, p2, q1, raw_distance);
 	if (raw_distance[1]+raw_distance[2]>8)
 	{
 		if (raw_distance[2]>8)
