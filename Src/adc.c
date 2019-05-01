@@ -9,17 +9,20 @@
 	* @return (uint16_t)							Since the ADC on the STM32F103C8 is 12bit, we will return a 12 bit value.
 */
 uint16_t readADC(ADC_HandleTypeDef *ADCx, uint8_t channel){
-	HAL_ADC_Start(ADCx);
-	while(HAL_ADC_PollForConversion(ADCx, channel) != HAL_OK);
+	sConfig.Channel = ADC_CHANNEL_9;
+	HAL_ADC_ConfigChannel(&hadc1, &sConfig);
+	HAL_ADC_Start(&hadc1);
+	HAL_ADC_PollForConversion(&hadc1, 1); 
+	
 	return HAL_ADC_GetValue(ADCx);
 }
 
 /**
 	* @brief Function that reads the LiPo battery voltage via a voltage divider. R1 = 1k, R2 = 470;
-* @return (float)	The abattery voltage. V_Batt = V_Sense * (R1 + R2) / R2 (Voltage divider=
+* @return (float)	The abattery voltage. V_Batt = V_Sense * (R1 + R2) / R2 (Voltage divider)
 */
 float batteryVoltage(void){
-	int adcVal = readADC(&hadc1, 9);
+	int adcVal = readADC(&hadc1, 1);
 	return ((float)adcVal / 4096) * 3.3 * (1000 + 470) / 470.0 ;
 }
 

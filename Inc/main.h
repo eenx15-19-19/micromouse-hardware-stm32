@@ -100,8 +100,6 @@ void Error_Handler(void);
 #define PWMA_GPIO_Port GPIOA
 #define PWMB_Pin GPIO_PIN_0
 #define PWMB_GPIO_Port GPIOB
-#define Battry_Monitor_Pin GPIO_PIN_1
-#define Battry_Monitor_GPIO_Port GPIOB
 #define Btn_Back_Pin GPIO_PIN_8
 #define Btn_Back_GPIO_Port GPIOA
 #define Btn_Back_EXTI_IRQn EXTI9_5_IRQn
@@ -121,8 +119,12 @@ extern TIM_HandleTypeDef htim2;
 extern TIM_HandleTypeDef htim3;
 extern TIM_HandleTypeDef htim4;	
 
+// To configure adc channel.
+extern ADC_ChannelConfTypeDef sConfig;
+
 extern volatile int go;
 extern volatile int rotate;
+extern int sensorValues[];
 void moveForward(void);
 void rotateLeft(void);
 /* USER CODE END Private defines */

@@ -46,6 +46,7 @@
 #include "pwm.h"
 #include "motor_control.h"
 #include "adc.h"
+#include "distance.h"
 
 /* USER CODE END Includes */
 
@@ -79,11 +80,19 @@ UART_HandleTypeDef huart3;
 /* USER CODE BEGIN PV */
 volatile int go;
 volatile int rotate;
-int accControl;
+int accNeeded;
 int moveSpeed;
 
+float battVoltage;
+
+int leftSensor;
+int middleSensor;
+int rightSensor;
+int sensorValues[3];
+ADC_ChannelConfTypeDef sConfig;
+
 //Uses as a command array for moving in the maze
-char commands[8] = "flflflfl";
+char commands[8] = "fllf";
 
 
 
@@ -158,7 +167,8 @@ int main(void)
 	
   motorSetup();
 	pwmSetup();
-	moveSpeed = speedToCounts(300*2);
+	moveSpeed = speedToCounts(500*2);
+	
 	
 	
   /* USER CODE END 2 */
@@ -171,10 +181,35 @@ int main(void)
 
     /* USER CODE BEGIN 3 */
 		
+		
+		
+		/*
+		sConfig.Channel = ADC_CHANNEL_9;
+		HAL_ADC_ConfigChannel(&hadc2, &sConfig);
+		HAL_ADC_Start(&hadc2);
+		while(HAL_ADC_PollForConversion(&hadc2, 50) != HAL_OK);
+		battVoltage = HAL_ADC_GetValue(&hadc2); //Battery Voltage
+		*/
+		
+		/*
+		sConfig.Channel = ADC_CHANNEL_9;
+		HAL_ADC_ConfigChannel(&hadc1, &sConfig);
+		HAL_ADC_Start(&hadc1);
+		while(HAL_ADC_PollForConversion(&hadc1, 50) != HAL_OK);
+		battVoltage = HAL_ADC_GetValue(&hadc1); //right
+		battVoltage = ((float)battVoltage / 4096) * 3.3 * (1000 + 470) / 470.0;
+		*/
+		HAL_Delay(50);
+		
+		
+		
+		
+		
 		//printf("Encoder speed: %.2f m/s --- Battery voltage: %.2f \n\r", countsToSpeed(encoderChange) / 1000, batteryVoltage() );
 		//HAL_Delay(500);
 		//Let the user know if the battery is running low.
-		if(batteryVoltage() < 6.5){
+		/*
+		if(battVoltage < 6.5){
 			HAL_GPIO_WritePin(LED3_GPIO_Port, LED3_Pin, GPIO_PIN_SET); //red
 			HAL_GPIO_WritePin(LED2_GPIO_Port, LED2_Pin, GPIO_PIN_RESET);//Green
 			beep(150);
@@ -182,7 +217,7 @@ int main(void)
 			HAL_GPIO_WritePin(LED3_GPIO_Port, LED3_Pin, GPIO_PIN_RESET); //red
 			HAL_GPIO_WritePin(LED2_GPIO_Port, LED2_Pin, GPIO_PIN_SET);//Green
 			beep(0);
-		}
+		}*/
 	
 		if(go){
 			HAL_Delay(750);
@@ -263,7 +298,7 @@ static void MX_ADC1_Init(void)
 
   /* USER CODE END ADC1_Init 0 */
 
-  ADC_ChannelConfTypeDef sConfig = {0};
+  //ADC_ChannelConfTypeDef sConfig = {0};
 
   /* USER CODE BEGIN ADC1_Init 1 */
 
@@ -271,21 +306,37 @@ static void MX_ADC1_Init(void)
   /**Common config 
   */
   hadc1.Instance = ADC1;
-  hadc1.Init.ScanConvMode = ADC_SCAN_DISABLE;
+  hadc1.Init.ScanConvMode = ADC_SCAN_ENABLE;
   hadc1.Init.ContinuousConvMode = DISABLE;
   hadc1.Init.DiscontinuousConvMode = DISABLE;
   hadc1.Init.ExternalTrigConv = ADC_SOFTWARE_START;
   hadc1.Init.DataAlign = ADC_DATAALIGN_RIGHT;
-  hadc1.Init.NbrOfConversion = 1;
+  hadc1.Init.NbrOfConversion = 3;
   if (HAL_ADC_Init(&hadc1) != HAL_OK)
   {
     Error_Handler();
   }
   /**Configure Regular Channel 
   */
-  sConfig.Channel = ADC_CHANNEL_9;
+  sConfig.Channel = ADC_CHANNEL_2;
   sConfig.Rank = ADC_REGULAR_RANK_1;
-  sConfig.SamplingTime = ADC_SAMPLETIME_41CYCLES_5;
+  sConfig.SamplingTime = ADC_SAMPLETIME_239CYCLES_5;
+  if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /**Configure Regular Channel 
+  */
+  sConfig.Channel = ADC_CHANNEL_3;
+  sConfig.Rank = ADC_REGULAR_RANK_2;
+  if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /**Configure Regular Channel 
+  */
+  sConfig.Channel = ADC_CHANNEL_4;
+  sConfig.Rank = ADC_REGULAR_RANK_3;
   if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
   {
     Error_Handler();
@@ -655,19 +706,19 @@ static void MX_GPIO_Init(void)
 /* USER CODE BEGIN 4 */
 
 void moveForward(){
-	distanceLeft = oneCellDistance;
+	distanceLeft = 8 * oneCellDistance;
 	targetSpeedW = 0;
 			
 	do{
-		accControl = needToDecelerate(distanceLeft, curSpeedX, 0);
-		if(accControl < decX)
+		accNeeded = needToDecelerate(distanceLeft, curSpeedX, 0);
+		if(accNeeded < decX)
 			targetSpeedX = moveSpeed;
 		else
 			targetSpeedX = 0;	
 		
 		//there is something else you can add here. Such as detecting falling edge of post to correct longitudinal position of mouse when running in a straight path
 	}
-	while( (encoderCount-oldEncoderCount) < (oneCellDistance));
+	while( (encoderCount-oldEncoderCount) < (8 * oneCellDistance));
 	targetSpeedX = 0;	
 	
 	oldEncoderCount = encoderCount;
@@ -677,8 +728,8 @@ void rotateLeft(void){
 	targetSpeedX = 0;
 	
 	do{
-		accControl = needToDecelerate(rotationLeft, curSpeedW, 0);
-		if(accControl < decW)
+		accNeeded = needToDecelerate(rotationLeft, curSpeedW, 0);
+		if(accNeeded < decW)
 			targetSpeedW = 30;
 		else
 			targetSpeedW = 0;	

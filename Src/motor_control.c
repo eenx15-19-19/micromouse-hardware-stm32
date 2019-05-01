@@ -40,8 +40,8 @@ int posPwmX = 0;
 int posPwmW = 0;
 float kpX = 2, kdX = 4;
 float kpW = 1, kdW = 12;//used in straight
-float accX = 100;// cm/s^2 => 0.1 m/s^2 
-float decX = 100; 
+float accX = 300;// cm/s^2 => 0.1 m/s^2 
+float decX = 300; 
 float accW = 1; //cm/s^2
 float decW = 1;
 
