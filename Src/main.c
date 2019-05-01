@@ -85,9 +85,6 @@ int moveSpeed;
 
 float battVoltage;
 
-int leftSensor;
-int middleSensor;
-int rightSensor;
 int sensorValues[3];
 ADC_ChannelConfTypeDef sConfig;
 

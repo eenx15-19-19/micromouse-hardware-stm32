@@ -6,6 +6,15 @@
 #include "pwm.h"
 
 
+// Sensors
+int leftSensor;
+int rightSensor;
+int leftSensorMiddleValue;
+int rightSensorMiddleValue;
+int sensorError;
+float sensorFeedback;
+float sensorScale;
+
 // Used for control loop
 int leftEncoder;
 int rightEncoder;
@@ -147,6 +156,8 @@ void calculateMotorPwm(void) // encoder PD controller
     /* simple PD loop to generate base speed for both motors */	
 	encoderFeedbackX = rightEncoderChange + leftEncoderChange;
 	encoderFeedbackW = rightEncoderChange - leftEncoderChange;	
+	
+	sensorFeedback = sensorError/sensorScale;//have sensor error properly scale to fit the system
 
 	posErrorX += curSpeedX - encoderFeedbackX;
 	posErrorW += curSpeedW - encoderFeedbackW;
@@ -164,6 +175,14 @@ void calculateMotorPwm(void) // encoder PD controller
 	setRightPWM(rightBaseSpeed);	
 }
 
+void getSensorError(void){
+	if(leftSensor > leftSensorMiddleValue && rightSensor < rightSensorMiddleValue)
+		sensorError = leftSensorMiddleValue - leftSensor;
+	else if(rightSensor > rightSensorMiddleValue && leftSensor < leftSensorMiddleValue)
+		sensorError = leftSensorMiddleValue - rightSensorMiddleValue;
+	else
+		sensorError = 0;
+}
 
 int needToDecelerate(int32_t dist, int16_t curSpd, int16_t endSpd)//speed are in encoder counts/ms, dist is in encoder counts 
 {

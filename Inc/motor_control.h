@@ -31,6 +31,7 @@ void speedProfile(void);
 void getEncoderStatus(void);
 void updateCurrentSpeed(void);
 void calculateMotorPwm(void);
+void getSensorError(void);
 int needToDecelerate(int32_t distanceLeft, int16_t currentSpeed, int16_t endSpeed);
 
 // 1000 is for s => ms
