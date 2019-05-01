@@ -204,6 +204,7 @@ void SysTick_Handler(void)
   /* USER CODE BEGIN SysTick_IRQn 1 */
 	
 	// Testing sensors
+	/*
 	sConfig.Channel = ADC_CHANNEL_2;
 	HAL_ADC_ConfigChannel(&hadc1, &sConfig);
 	HAL_ADC_Start(&hadc1);
@@ -221,7 +222,7 @@ void SysTick_Handler(void)
 	HAL_ADC_Start(&hadc1);
 	while(HAL_ADC_PollForConversion(&hadc1, 1) != HAL_OK);
 	sensorValues[2] = HAL_ADC_GetValue(&hadc1); //right
-	
+	*/
 	Millis++;
 	
 	speedProfile();

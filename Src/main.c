@@ -82,6 +82,7 @@ volatile int go;
 volatile int rotate;
 int accNeeded;
 int moveSpeed;
+int turnSpeed;
 
 float battVoltage;
 
@@ -89,7 +90,7 @@ int sensorValues[3];
 ADC_ChannelConfTypeDef sConfig; // IMPORTANT - Comment out the creation of sConfig in the ADC1_Init function in main, if not the sensors will NOT work.
 
 //Uses as a command array for moving in the maze
-char commands[8] = "fllf";
+char commands[8] = "fllfll";
 
 /* USER CODE END PV */
 
@@ -163,6 +164,7 @@ int main(void)
   motorSetup();
 	pwmSetup();
 	moveSpeed = speedToCounts(300*2);
+	turnSpeed = 30;
 	
   /* USER CODE END 2 */
 
@@ -204,7 +206,13 @@ int main(void)
 			HAL_Delay(750);
 			rotate = 0;
 			
-			rotateLeft();
+			moveSpeed += speedToCounts(500*2);
+			turnSpeed += 60;
+			accW = 10;
+		  decW = 10;
+			accX = 300;
+			decX = 300;
+			//rotateLeft();
 		}
 				
 		}
@@ -675,7 +683,7 @@ static void MX_GPIO_Init(void)
 /* USER CODE BEGIN 4 */
 
 void moveForward(void){
-	int nrOfCells = 1;
+	int nrOfCells = 4;
 	int totalDistance = nrOfCells * oneCellDistance;
 	distanceLeft = totalDistance;
 	targetSpeedW = 0;
@@ -701,7 +709,7 @@ void rotateLeft(void){
 	do{
 		accNeeded = needToDecelerate(rotationLeft, curSpeedW, 0);
 		if(accNeeded < decW)
-			targetSpeedW = 30;
+			targetSpeedW = turnSpeed;
 		else
 			targetSpeedW = 0;	
 		

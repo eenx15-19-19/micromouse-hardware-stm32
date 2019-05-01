@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 
-#define WHEEL_TO_WHEEL 89.0 // Center of wheel to the center of the other wheel. 
+#define WHEEL_TO_WHEEL 89.5 // Center of wheel to the center of the other wheel. 
 #define WHEEL_D 30.6
 #define CPR 2048.0
 #define PI 3.141592
@@ -13,6 +13,8 @@
 // Global
 extern int targetSpeedX;
 extern int targetSpeedW;
+extern float accX;
+extern float accW;
 extern float decX; 
 extern float decW;
 
