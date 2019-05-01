@@ -54,7 +54,8 @@ void motorSetup(void){
 		HAL_TIM_Encoder_Start(&htim4, TIM_CHANNEL_ALL);
 		
 		/*Enable the motor*/
-		HAL_GPIO_WritePin(H_Bridge_Enable_GPIO_Port, H_Bridge_Enable_Pin, GPIO_PIN_SET);
+		// Not needded anymore since it is hardwired to 3.3V.
+		//HAL_GPIO_WritePin(H_Bridge_Enable_GPIO_Port, H_Bridge_Enable_Pin, GPIO_PIN_SET);
 		/* Orientation Right motor -> CW */
 		HAL_GPIO_WritePin(AIN1_GPIO_Port, AIN1_Pin, GPIO_PIN_SET);
 		HAL_GPIO_WritePin(AIN2_GPIO_Port, AIN2_Pin, GPIO_PIN_RESET);

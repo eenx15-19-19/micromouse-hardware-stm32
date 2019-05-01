@@ -86,8 +86,12 @@ void Error_Handler(void);
 #define LED2_GPIO_Port GPIOC
 #define LED3_Pin GPIO_PIN_15
 #define LED3_GPIO_Port GPIOC
-#define H_Bridge_Enable_Pin GPIO_PIN_4
-#define H_Bridge_Enable_GPIO_Port GPIOA
+#define Sensor_Left_Pin GPIO_PIN_2
+#define Sensor_Left_GPIO_Port GPIOA
+#define Sensor_Middle_Pin GPIO_PIN_3
+#define Sensor_Middle_GPIO_Port GPIOA
+#define Sensor_Right_Pin GPIO_PIN_4
+#define Sensor_Right_GPIO_Port GPIOA
 #define AIN2_Pin GPIO_PIN_5
 #define AIN2_GPIO_Port GPIOA
 #define AIN1_Pin GPIO_PIN_6
