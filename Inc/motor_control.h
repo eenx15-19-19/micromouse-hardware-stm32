@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 
-#define WHEEL_TO_WHEEL 89.5 // Center of wheel to the center of the other wheel. 
+#define WHEEL_TO_WHEEL 90.7 // Center of wheel to the center of the other wheel. 
 #define WHEEL_D 30.6
 #define CPR 2048.0
 #define PI 3.141592
@@ -18,8 +18,10 @@ extern float accW;
 extern float decX; 
 extern float decW;
 
-extern int frontSensorTreshhold;
-extern int frontSensor;
+extern float leftSensorMiddleValue;
+extern float rightSensorMiddleValue;
+extern float frontSensorTreshhold;
+extern float frontSensor;
 
 // Needed for running in main
 extern float distanceLeft;

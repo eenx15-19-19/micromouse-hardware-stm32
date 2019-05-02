@@ -9,11 +9,12 @@
 	* @return (uint16_t)							Since the ADC on the STM32F103C8 is 12bit, we will return a 12 bit value.
 */
 uint16_t readADC(ADC_HandleTypeDef *ADCx, uint8_t channel){
+	/*
 	sConfig.Channel = ADC_CHANNEL_9;
 	HAL_ADC_ConfigChannel(&hadc1, &sConfig);
 	HAL_ADC_Start(&hadc1);
 	HAL_ADC_PollForConversion(&hadc1, 1); 
-	
+	*/
 	return HAL_ADC_GetValue(ADCx);
 }
 

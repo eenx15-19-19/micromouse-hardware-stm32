@@ -1,41 +1,26 @@
 #include "main.h"
 #include "distance.h"
 #include "adc.h"
+#include "motor_control.h"
 
-double value;
 char wall[3];
-double value_adc[3];
-double p1[3]={-685.4, -89.66, 93.38};
-double p2[3]={11430.0, 875.0, 7481.0};
-double q1[3]={4.008, 2.18, 2.519};
+float p1[3]={-5.579, -1.668, -3.89};
+float p2[3]={14720, 7745, 10370};
+float q1[3]={955.9, 13.31, 101.1};
+float calcDistances[3];
 
-void equation(double p1[], double q1[], double p2[], double arr[]){
+void calcSensorDistances(void){
 	// get value of p1 and q1 from lineraisation from matlabs cftool, use rational with numerator degree=0, denominator degree=1. 
 	//the array is the array with measurment data from IR sensors(3 of them). 
-	for (int i=0; i<3; i++){
-		arr[i] = (p1[i]*arr[i]+p2[i])/(arr[i]+q1[i]);
+	for(int i=0; i<3; i++){
+		calcDistances[i] = (p1[i]*sensorValues[i] + p2[i]) / (sensorValues[i]+q1[i]);
 	}
 }
 
-void sensorDist(double raw_distance[], ADC_HandleTypeDef hadc){
-	HAL_ADC_Start(&hadc);
-	
-	HAL_ADC_PollForConversion(&hadc, 1);
-	raw_distance[0] = HAL_ADC_GetValue(&hadc); //left
-	
-	HAL_ADC_PollForConversion(&hadc, 1);
-	raw_distance[1] = HAL_ADC_GetValue(&hadc); //middle
-	
-	HAL_ADC_PollForConversion(&hadc, 1);
-	raw_distance[2] = HAL_ADC_GetValue(&hadc); //right
-	HAL_ADC_Stop(&hadc);
-}
 
-void wallDet(double raw_distance[], char walls[], ADC_HandleTypeDef hadc)
-{
+void wallDet(float raw_distance[], char walls[]){
 	// takes two arguments, the first a double array where the three sensors data is stored the second a char array where the walls are stored
-	sensorDist(raw_distance, hadc);
-	equation(p1, p2, q1, raw_distance);
+	calcSensorDistances();
 	if (raw_distance[1]+raw_distance[2]>8)
 	{
 		if (raw_distance[2]>8)
@@ -57,4 +42,13 @@ void wallDet(double raw_distance[], char walls[], ADC_HandleTypeDef hadc)
 		walls[0]='n';
 	else
 		walls[0]='y';
+}
+
+
+void calibrateSensors(void){	// Measure the sensorMiddle values and store them
+	HAL_Delay(300); // Stabalize
+	
+	leftSensorMiddleValue = calcDistances[0];
+	frontSensorTreshhold = calcDistances[1];
+	rightSensorMiddleValue = calcDistances[2];
 }

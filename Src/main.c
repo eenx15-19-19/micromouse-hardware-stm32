@@ -67,6 +67,7 @@
 
 /* Private variables ---------------------------------------------------------*/
 ADC_HandleTypeDef hadc1;
+DMA_HandleTypeDef hdma_adc1;
 
 I2C_HandleTypeDef hi2c1;
 
@@ -78,25 +79,24 @@ TIM_HandleTypeDef htim4;
 UART_HandleTypeDef huart3;
 
 /* USER CODE BEGIN PV */
-volatile int go;
-volatile int rotate;
+volatile int enableControlLoop = 0;
+volatile int go = 0;
+volatile int rot = 0;
 int accNeeded;
 int moveSpeed;
 int turnSpeed;
 
-float battVoltage;
-
-int sensorValues[3];
-ADC_ChannelConfTypeDef sConfig; // IMPORTANT - Comment out the creation of sConfig in the ADC1_Init function in main, if not the sensors will NOT work.
+uint32_t sensorValues[3];
 
 //Uses as a command array for moving in the maze
-char commands[8] = "fllfll";
+char commands[8] = "flfbfrfb";
 
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
+static void MX_DMA_Init(void);
 static void MX_TIM2_Init(void);
 static void MX_TIM3_Init(void);
 static void MX_TIM4_Init(void);
@@ -152,6 +152,7 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
+  MX_DMA_Init();
   MX_TIM2_Init();
   MX_TIM3_Init();
   MX_TIM4_Init();
@@ -161,6 +162,9 @@ int main(void)
   MX_USART3_UART_Init();
   /* USER CODE BEGIN 2 */
 	
+	HAL_ADC_Start_DMA(&hadc1, (uint32_t*) sensorValues, 3);
+	
+	calibrateSensors();
   motorSetup();
 	pwmSetup();
 	moveSpeed = speedToCounts(300*2);
@@ -193,18 +197,22 @@ int main(void)
 		if(go){
 			HAL_Delay(750);
 			go = 0;
-			
-			for(int i = 0; i < 8; i++){
+		
+			for(int i = 0; i < 8; i++){ //The 5 has to be calculated and not hard set....
 				if(commands[i] == 'f')
-					moveForward();
+					move(2);
 				else if(commands[i] == 'l')
-					rotateLeft();
+					rotate(90);
+				else if(commands[i] == 'r')
+					rotate(-90);
+				else if(commands[i] == 'b')
+					rotate(180); // rotate counter clockwise
 			}
 		}
 		
-		if(rotate){
+		if(rot){
 			HAL_Delay(750);
-			rotate = 0;
+			rot = 0;
 			
 			moveSpeed += speedToCounts(500*2);
 			turnSpeed += 60;
@@ -212,7 +220,6 @@ int main(void)
 		  decW = 10;
 			accX = 300;
 			decX = 300;
-			//rotateLeft();
 		}
 				
 		}
@@ -275,7 +282,7 @@ static void MX_ADC1_Init(void)
 
   /* USER CODE END ADC1_Init 0 */
 
-  //ADC_ChannelConfTypeDef sConfig = {0};
+  ADC_ChannelConfTypeDef sConfig = {0};
 
   /* USER CODE BEGIN ADC1_Init 1 */
 
@@ -284,7 +291,7 @@ static void MX_ADC1_Init(void)
   */
   hadc1.Instance = ADC1;
   hadc1.Init.ScanConvMode = ADC_SCAN_ENABLE;
-  hadc1.Init.ContinuousConvMode = DISABLE;
+  hadc1.Init.ContinuousConvMode = ENABLE;
   hadc1.Init.DiscontinuousConvMode = DISABLE;
   hadc1.Init.ExternalTrigConv = ADC_SOFTWARE_START;
   hadc1.Init.DataAlign = ADC_DATAALIGN_RIGHT;
@@ -617,6 +624,21 @@ static void MX_USART3_UART_Init(void)
 
 }
 
+/** 
+  * Enable DMA controller clock
+  */
+static void MX_DMA_Init(void) 
+{
+  /* DMA controller clock enable */
+  __HAL_RCC_DMA1_CLK_ENABLE();
+
+  /* DMA interrupt init */
+  /* DMA1_Channel1_IRQn interrupt configuration */
+  HAL_NVIC_SetPriority(DMA1_Channel1_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(DMA1_Channel1_IRQn);
+
+}
+
 /**
   * @brief GPIO Initialization Function
   * @param None
@@ -682,11 +704,10 @@ static void MX_GPIO_Init(void)
 
 /* USER CODE BEGIN 4 */
 
-void moveForward(void){
-	int nrOfCells = 4;
+void move(int nrOfCells){
 	int totalDistance = nrOfCells * oneCellDistance;
 	distanceLeft = totalDistance;
-	targetSpeedW = 0;
+	targetSpeedW = 0; // No curve turns
 			
 	do{
 		accNeeded = needToDecelerate(distanceLeft, curSpeedX, 0);
@@ -695,30 +716,34 @@ void moveForward(void){
 		else
 			targetSpeedX = 0;	
 	}
-	while( (encoderCount-oldEncoderCount) < (totalDistance));
-	// Add the following to stop with sensors instead of encoders when we get close to a front wall (the encoders can still stop the mouse)
-	// || frontSensor > frontSensorTreshhold
+	while( (encoderCount-oldEncoderCount) < (totalDistance) );
+//|| calcDistances[1] > frontSensorTreshhold
 	targetSpeedX = 0;	
 	
 	oldEncoderCount = encoderCount;
 }
-void rotateLeft(void){
-	rotationLeft = quarterTurn;
-	targetSpeedX = 0;
+void rotate(int degrees){
+	int totalDistance = rotToCounts(degrees);
+	
+	int direction = 1;
+	if(degrees < 0)
+		direction = -1;
+	
+	rotationLeft = totalDistance;
+	targetSpeedX = 0; // Stand still while doing rotation
 	
 	do{
 		accNeeded = needToDecelerate(rotationLeft, curSpeedW, 0);
 		if(accNeeded < decW)
-			targetSpeedW = turnSpeed;
+			targetSpeedW = direction * turnSpeed;
 		else
 			targetSpeedW = 0;	
-		
-		//there is something else you can add here. Such as detecting falling edge of post to correct longitudinal position of mouse when running in a straight path
 	}
-	while( (rotationCount-oldRotationCount) < quarterTurn);
+	while( (rotationCount-oldRotationCount) < (direction * totalDistance));
 	targetSpeedW = 0;	
 	
 	oldRotationCount = rotationCount;
+	// Perhaps oldRotationCount has to be overwritten in move also.
 }
 
 /* USER CODE END 4 */

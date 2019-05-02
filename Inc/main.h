@@ -123,10 +123,12 @@ extern TIM_HandleTypeDef htim4;
 extern ADC_ChannelConfTypeDef sConfig;
 
 extern volatile int go;
-extern volatile int rotate;
-extern int sensorValues[];
-void moveForward(void);
-void rotateLeft(void);
+extern volatile int rot;
+extern volatile int enableControlLoop;
+extern uint32_t sensorValues[];
+
+void move(int nrOfCells);
+void rotate(int degrees); // Positive is counter clockwise, negative is clockwise
 /* USER CODE END Private defines */
 
 #ifdef __cplusplus

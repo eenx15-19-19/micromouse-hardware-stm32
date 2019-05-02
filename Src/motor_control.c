@@ -4,18 +4,19 @@
 #include "stm32f1xx_hal.h"
 #include "motor_control.h"
 #include "pwm.h"
+#include "distance.h"
 
 
 // Sensors
-int leftSensor = 0;
-int rightSensor = 0;
-int frontSensor = 0;
-int frontSensorTreshhold = 0;
-int leftSensorMiddleValue = 0;
-int rightSensorMiddleValue = 0;
-int sensorError = 0;
+float leftSensor = 0;
+float rightSensor = 0;
+float frontSensor = 0;
+float frontSensorTreshhold = 4.0;
+float leftSensorMiddleValue = 4.0;
+float rightSensorMiddleValue = 4.0;
+float sensorError = 0;
 float sensorFeedback = 0;;
-float sensorScale = 1;
+float sensorScale = 0.1;
 
 // Used for control loop
 int leftEncoder;
@@ -80,6 +81,7 @@ void motorSetup(void){
 void speedProfile(void)
 {	
 	getEncoderStatus();
+	getSensorError();
 	updateCurrentSpeed();
 	calculateMotorPwm();      
 }
@@ -153,7 +155,7 @@ void updateCurrentSpeed(void)
 }
 
 
-void calculateMotorPwm(void) // encoder PD controller
+void calculateMotorPwm(void) // Position and rotation PD controller
 {	
 	
 	// PD loop for translation and rotation to generate base speed for both motors
@@ -182,10 +184,24 @@ void calculateMotorPwm(void) // encoder PD controller
 }
 
 void getSensorError(void){
-	if(leftSensor > leftSensorMiddleValue && rightSensor < rightSensorMiddleValue)
+	leftSensor = calcDistances[0];
+	frontSensor = calcDistances[1];
+	rightSensor = calcDistances[2];
+	
+	/*
+	if((leftSensor < leftSensorMiddleValue || rightSensor < rightSensorMiddleValue) 
+		&& frontSensor < frontSensorTreshhold){
+			enableControlLoop = 0;
+			setLeftPWM(0);
+			setRightPWM(0);
+		}
+	*/
+		
+	
+	if(leftSensor < leftSensorMiddleValue && rightSensor > rightSensorMiddleValue && rightSensor < 10)
 		sensorError = leftSensorMiddleValue - leftSensor;
-	else if(rightSensor > rightSensorMiddleValue && leftSensor < leftSensorMiddleValue)
-		sensorError = leftSensorMiddleValue - rightSensorMiddleValue;
+	else if(rightSensor < rightSensorMiddleValue && leftSensor > leftSensorMiddleValue && leftSensor < 10)
+		sensorError = rightSensor - rightSensorMiddleValue;
 	else
 		sensorError = 0;
 }
@@ -194,7 +210,7 @@ int needToDecelerate(int32_t dist, int16_t curSpd, int16_t endSpd)//speed are in
 {
 	if (curSpd<0) curSpd = -curSpd;
 	if (endSpd<0) endSpd = -endSpd;
-	if (dist<0) dist = 1;			//-dist;
+	if (dist<0) dist = -dist;			//-dist;
 	if (dist == 0) dist = 1;  //prevent divide by 0
 
 	int a = countsToSpeed((curSpd*curSpd - endSpd*endSpd)*100/dist/4/2);

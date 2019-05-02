@@ -39,6 +39,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "motor_control.h"
+#include "distance.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -73,6 +74,7 @@ uint32_t Millis = 0;
 /* USER CODE END 0 */
 
 /* External variables --------------------------------------------------------*/
+extern DMA_HandleTypeDef hdma_adc1;
 /* USER CODE BEGIN EV */
 
 /* USER CODE END EV */
@@ -203,29 +205,11 @@ void SysTick_Handler(void)
   HAL_IncTick();
   /* USER CODE BEGIN SysTick_IRQn 1 */
 	
-	// Testing sensors
-	/*
-	sConfig.Channel = ADC_CHANNEL_2;
-	HAL_ADC_ConfigChannel(&hadc1, &sConfig);
-	HAL_ADC_Start(&hadc1);
-	while(HAL_ADC_PollForConversion(&hadc1, 1) != HAL_OK);
-	sensorValues[0] = HAL_ADC_GetValue(&hadc1); //left
-	
-	sConfig.Channel = ADC_CHANNEL_3;
-	HAL_ADC_ConfigChannel(&hadc1, &sConfig);
-	HAL_ADC_Start(&hadc1);
-	while(HAL_ADC_PollForConversion(&hadc1, 1) != HAL_OK);
-	sensorValues[1] = HAL_ADC_GetValue(&hadc1); //middle
-	
-	sConfig.Channel = ADC_CHANNEL_4;
-	HAL_ADC_ConfigChannel(&hadc1, &sConfig);
-	HAL_ADC_Start(&hadc1);
-	while(HAL_ADC_PollForConversion(&hadc1, 1) != HAL_OK);
-	sensorValues[2] = HAL_ADC_GetValue(&hadc1); //right
-	*/
 	Millis++;
 	
-	speedProfile();
+	calcSensorDistances();
+	if(enableControlLoop) //Only start the control if the button is pressed.
+		speedProfile();
 	
 	//Let the user know the code is running)
 	if(Millis % 1000 == 0)
@@ -243,6 +227,20 @@ void SysTick_Handler(void)
 /* For the available peripheral interrupt handler names,                      */
 /* please refer to the startup file (startup_stm32f1xx.s).                    */
 /******************************************************************************/
+
+/**
+  * @brief This function handles DMA1 channel1 global interrupt.
+  */
+void DMA1_Channel1_IRQHandler(void)
+{
+  /* USER CODE BEGIN DMA1_Channel1_IRQn 0 */
+
+  /* USER CODE END DMA1_Channel1_IRQn 0 */
+  HAL_DMA_IRQHandler(&hdma_adc1);
+  /* USER CODE BEGIN DMA1_Channel1_IRQn 1 */
+
+  /* USER CODE END DMA1_Channel1_IRQn 1 */
+}
 
 /**
   * @brief This function handles EXTI line[9:5] interrupts.
@@ -266,9 +264,10 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
 	if(GPIO_Pin == Btn_Front_Pin){
 		if(HAL_GPIO_ReadPin(Btn_Front_GPIO_Port, Btn_Front_Pin) == 0)
 			go = 1;
+			enableControlLoop = 1;
 	}else{
 		if(HAL_GPIO_ReadPin(Btn_Back_GPIO_Port, Btn_Back_Pin) == 1)
-			rotate = 1;
+			rot = 1;
 	}
 	
 }
