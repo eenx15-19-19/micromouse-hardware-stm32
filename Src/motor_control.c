@@ -166,6 +166,9 @@ void calculateMotorPwm(void) // Position and rotation PD controller
 	 
 	//Have sensor error properly scale to fit the system
 	sensorFeedback = sensorError / sensorScale; 
+	
+	sensorFeedback = 0; //REMOVE WHILE NOT DEBUGGING ----------------------------------------------------------------------------
+	
 	if(rotating)
 		sensorFeedback = 0;
 	
