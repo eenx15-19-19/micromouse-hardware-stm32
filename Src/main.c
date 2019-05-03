@@ -724,6 +724,8 @@ void move(int nrOfCells){
 	oldEncoderCount = encoderCount;
 }
 void rotate(int degrees){
+	rotating = 1;
+	
 	int totalDistance = rotToCounts(degrees);
 	
 	int direction = 1;
@@ -742,6 +744,7 @@ void rotate(int degrees){
 	}
 	while( (rotationCount-oldRotationCount) < (direction * totalDistance));
 	targetSpeedW = 0;	
+	rotating = 0;
 	
 	oldRotationCount = rotationCount;
 	// Perhaps oldRotationCount has to be overwritten in move also.

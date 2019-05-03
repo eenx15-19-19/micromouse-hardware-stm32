@@ -18,6 +18,8 @@ float sensorError = 0;
 float sensorFeedback = 0;;
 float sensorScale = 0.1;
 
+int rotating;
+
 // Used for control loop
 int leftEncoder;
 int rightEncoder;
@@ -164,6 +166,8 @@ void calculateMotorPwm(void) // Position and rotation PD controller
 	 
 	//Have sensor error properly scale to fit the system
 	sensorFeedback = sensorError / sensorScale; 
+	if(rotating)
+		sensorFeedback = 0;
 	
 	rotationalFeedback = encoderFeedbackW + sensorFeedback;
 
