@@ -111,7 +111,7 @@ static void MX_USART3_UART_Init(void);
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 
-// Code used for sending transmitting data via UART via the printf() function. 
+// Used for sending transmitting data via UART via the printf() function. 
 #ifdef __GNUC__
 	#define PUTCHAR_PROTOTYPE int __io_putchar(int ch)
 #else
@@ -162,6 +162,7 @@ int main(void)
   MX_USART3_UART_Init();
   /* USER CODE BEGIN 2 */
 	
+	// Start the DMA for the ADC reading the sensor values
 	HAL_ADC_Start_DMA(&hadc1, (uint32_t*) sensorValues, 3);
 	
 	calibrateSensors();
@@ -200,11 +201,11 @@ int main(void)
 		
 			for(int i = 0; i < 8; i++){ //The 5 has to be calculated and not hard set....
 				if(commands[i] == 'f')
-					move(2);
+					move(3);
 				else if(commands[i] == 'l')
 					rotate(90);
 				else if(commands[i] == 'r')
-					rotate(-90);
+					rotate(270);
 				else if(commands[i] == 'b')
 					rotate(180); // rotate counter clockwise
 			}
@@ -218,8 +219,8 @@ int main(void)
 			turnSpeed += 60;
 			accW = 10;
 		  decW = 10;
-			accX = 300;
-			decX = 300;
+			accX = 400;
+			decX = 400;
 		}
 				
 		}

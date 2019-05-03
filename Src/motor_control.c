@@ -11,9 +11,9 @@
 float leftSensor = 0;
 float rightSensor = 0;
 float frontSensor = 0;
-float frontSensorTreshhold = 4.0;
-float leftSensorMiddleValue = 4.0;
-float rightSensorMiddleValue = 4.0;
+float frontSensorTreshhold = 0;
+float leftSensorMiddleValue = 0;
+float rightSensorMiddleValue = 0;
 float sensorError = 0;
 float sensorFeedback = 0;;
 float sensorScale = 0.1;
@@ -189,6 +189,7 @@ void getSensorError(void){
 	rightSensor = calcDistances[2];
 	
 	/*
+	// Stop the mouse from running when the mouse runts into walls, not tested.
 	if((leftSensor < leftSensorMiddleValue || rightSensor < rightSensorMiddleValue) 
 		&& frontSensor < frontSensorTreshhold){
 			enableControlLoop = 0;
