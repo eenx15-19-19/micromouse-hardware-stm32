@@ -24,24 +24,24 @@ void wallDet(float raw_distance[], char walls[]){
 	if (raw_distance[1]+raw_distance[2]>8)
 	{
 		if (raw_distance[2]>8)
-			walls[2]='n';
+			walls[2]=0;
 		else
-			walls[2]='y';
+			walls[2]=1;
 		if (raw_distance[1]>8)
-			walls[1]='n';
+			walls[1]=0;
 		else
-			walls[1]='y';
+			walls[1]=1;
 	}
 	else
 	{
-		walls[1]='y';
-		walls[2]='y';
+		walls[1]=1;
+		walls[2]=1;
 	}
 	
 	if (raw_distance[0]>8)
-		walls[0]='n';
+		walls[0]=0;
 	else
-		walls[0]='y';
+		walls[0]=0;
 }
 
 
