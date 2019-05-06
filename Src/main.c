@@ -89,8 +89,9 @@ int turnSpeed;
 uint32_t sensorValues[3];
 
 //Uses as a command array for moving in the maze
-char commands[8] = "flfbfrfb";
-
+char commands[] = "frfrfrfrrrrr";
+char rightCommands[5] = "frfrr";
+char leftCommands[5] = "flfll";
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -199,17 +200,54 @@ int main(void)
 			HAL_Delay(750);
 			go = 0;
 		
-			for(int i = 0; i < 8; i++){ //The 5 has to be calculated and not hard set....
-				if(commands[i] == 'f')
+			int commandSize = sizeof(commands) / sizeof(commands[0]);
+			
+			for(int i = 0; i < commandSize; i++){
+				char command = commands[i];
+				int nrOfCommands = 1;
+				
+				for(int j = i+1; j < commandSize; j++){
+					if(commands[j] == command){
+						nrOfCommands++;
+					}else{
+						i = j - 1; 
+						break;
+					}
+					/*else if(j == commandSize - 1){
+						i = j;
+						break;
+					}*/
+				}
+				
+				if(command == 'f')
+					move(nrOfCommands);
+				else if(command == 'l')
+					rotate(90*nrOfCommands);
+				else if(command == 'r')
+					rotate(-90*nrOfCommands);
+				else if(command == 'b')
+					rotate(180*nrOfCommands
+				
+				); 
+			}
+			
+			
+			/*
+			for(int i = 0; i < commandSize; i++){ 
+				//We should also implement so that the fff => move(3) and not move(1), move(1), move(1)
+				char command = commands[i];
+				if(command == 'f')
 					move(3);
-				else if(commands[i] == 'l')
+				else if(command == 'l')
 					rotate(90);
-				else if(commands[i] == 'r')
-					rotate(270);
-				else if(commands[i] == 'b')
+				else if(command == 'r')
+					rotate(-90);
+				else if(command == 'b')
 					rotate(180); // rotate counter clockwise
 			}
+			*/
 		}
+			
 		
 		if(rot){
 			HAL_Delay(750);
@@ -725,14 +763,14 @@ void move(int nrOfCells){
 }
 void rotate(int degrees){
 	rotating = 1;
-	
-	int totalDistance = rotToCounts(degrees);
-	
 	int direction = 1;
-	if(degrees < 0)
-		direction = -1;
-	
+	int totalDistance = rotToCounts(degrees);
 	rotationLeft = totalDistance;
+	
+	if(degrees < 0){
+		direction = -1;
+	}
+	
 	targetSpeedX = 0; // Stand still while doing rotation
 	
 	do{
@@ -742,7 +780,7 @@ void rotate(int degrees){
 		else
 			targetSpeedW = 0;	
 	}
-	while( (rotationCount-oldRotationCount) < (direction * totalDistance));
+	while( direction * (rotationCount-oldRotationCount) < direction * totalDistance);
 	targetSpeedW = 0;	
 	rotating = 0;
 	

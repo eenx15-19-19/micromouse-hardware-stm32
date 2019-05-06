@@ -173,20 +173,15 @@
         <Ww>
           <count>4</count>
           <WinNumber>1</WinNumber>
-          <ItemText>sensorError</ItemText>
+          <ItemText>rotationLeft</ItemText>
         </Ww>
         <Ww>
           <count>5</count>
           <WinNumber>1</WinNumber>
-          <ItemText>rotationLeft</ItemText>
-        </Ww>
-        <Ww>
-          <count>6</count>
-          <WinNumber>1</WinNumber>
           <ItemText>enableControlLoop,0x0A</ItemText>
         </Ww>
         <Ww>
-          <count>7</count>
+          <count>6</count>
           <WinNumber>1</WinNumber>
           <ItemText>accNeeded,0x0A</ItemText>
         </Ww>
@@ -200,52 +195,37 @@
         <Ww>
           <count>1</count>
           <WinNumber>2</WinNumber>
-          <ItemText>accX</ItemText>
+          <ItemText>encoderCount,0x0A</ItemText>
         </Ww>
         <Ww>
           <count>2</count>
           <WinNumber>2</WinNumber>
-          <ItemText>encoderCount,0x0A</ItemText>
+          <ItemText>oldEncoderCount</ItemText>
         </Ww>
         <Ww>
           <count>3</count>
           <WinNumber>2</WinNumber>
-          <ItemText>oldEncoderCount</ItemText>
+          <ItemText>encoderCount-oldEncoderCount</ItemText>
         </Ww>
         <Ww>
           <count>4</count>
           <WinNumber>2</WinNumber>
-          <ItemText>encoderCount-oldEncoderCount</ItemText>
+          <ItemText>rotationLeft</ItemText>
         </Ww>
         <Ww>
           <count>5</count>
           <WinNumber>2</WinNumber>
-          <ItemText>rotationLeft</ItemText>
+          <ItemText>rotationCount</ItemText>
         </Ww>
         <Ww>
           <count>6</count>
           <WinNumber>2</WinNumber>
-          <ItemText>rotationCount</ItemText>
+          <ItemText>oldRotationCount</ItemText>
         </Ww>
         <Ww>
           <count>7</count>
           <WinNumber>2</WinNumber>
-          <ItemText>oldRotationCount</ItemText>
-        </Ww>
-        <Ww>
-          <count>8</count>
-          <WinNumber>2</WinNumber>
           <ItemText>rotationCount-oldRotationCount</ItemText>
-        </Ww>
-        <Ww>
-          <count>9</count>
-          <WinNumber>2</WinNumber>
-          <ItemText>rotationLeft * rotationCount</ItemText>
-        </Ww>
-        <Ww>
-          <count>10</count>
-          <WinNumber>2</WinNumber>
-          <ItemText>direction * totalDistance</ItemText>
         </Ww>
       </WatchWindow2>
       <MemoryWindow1>
