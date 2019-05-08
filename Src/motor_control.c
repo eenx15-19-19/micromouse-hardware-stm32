@@ -19,7 +19,7 @@ float sensorFeedback = 0;;
 float sensorScale = 0.05;
 
 //Used for disabling and enabling when the sensors should help guide the mouse and when not to. 
-int disableSensorAdjustment = 0;
+int disableSensorAdjustment = 1;
 
 // Used for control loop
 int leftEncoder;
@@ -56,8 +56,8 @@ int posPwmX = 0;
 int posPwmW = 0;
 float kpX = 2, kdX = 4;
 float kpW = 1, kdW = 10;//used in straight
-float accX = 100; // 100 cm/s^2 => 1 m/s^2 
-float decX = 100; 
+float accX = 200; // 100 cm/s^2 => 1 m/s^2 
+float decX = 200; 
 float accW = 1; //cm/s^2
 float decW = 1;
 
@@ -205,9 +205,9 @@ void getSensorError(void){
 	*/
 		
 	
-	if(leftSensor < leftSensorMiddleValue && rightSensor > rightSensorMiddleValue && rightSensor < 10)
+	if(leftSensor < leftSensorMiddleValue && rightSensor > rightSensorMiddleValue /*&& rightSensor < 10*/)
 		sensorError = leftSensorMiddleValue - leftSensor;
-	else if(rightSensor < rightSensorMiddleValue && leftSensor > leftSensorMiddleValue && leftSensor < 10)
+	else if(rightSensor < rightSensorMiddleValue && leftSensor > leftSensorMiddleValue /*&& leftSensor < 10*/)
 		sensorError = rightSensor - rightSensorMiddleValue;
 	else
 		sensorError = 0;

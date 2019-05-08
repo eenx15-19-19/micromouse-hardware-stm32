@@ -266,7 +266,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
 	}else{
 		if(HAL_GPIO_ReadPin(Btn_Back_GPIO_Port, Btn_Back_Pin) == 1)
 			//HAL_UART_Transmit(&huart3, restart, 1, 100);
-			rot = 1;
+			start = 1;
 	}
 	
 }

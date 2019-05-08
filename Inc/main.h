@@ -124,6 +124,7 @@ extern UART_HandleTypeDef huart3;
 // To configure adc channel.
 extern ADC_ChannelConfTypeDef sConfig;
 
+extern volatile int start;
 extern volatile int go;
 extern volatile int rot;
 extern volatile int enableControlLoop;

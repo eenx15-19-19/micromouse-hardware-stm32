@@ -81,6 +81,7 @@ UART_HandleTypeDef huart3;
 
 /* USER CODE BEGIN PV */
 volatile int enableControlLoop = 0;
+volatile int start = 0;
 volatile int go = 0;
 volatile int rot = 0;
 int accNeeded;
@@ -106,6 +107,10 @@ uint8_t fas2Str[5] = "fas2\n";
 uint8_t fas3Str[5] = "fas3\n";
 
 uint8_t text[13] = "Hello world!\n";
+
+// Rotating
+int rightAngle = -92;
+int leftAngle = 90;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -188,6 +193,7 @@ int main(void)
 	enableControlLoop = 1; //Start the control loop imidietly
 	
 	//HAL_UART_Transmit(&huart3, restart, 2, 100);
+	while(!start); // Wait for back button press
 	HAL_UART_Transmit(&huart3, fas1Str, 5, 100);
 	
 	fas1 = 1;
@@ -210,18 +216,19 @@ int main(void)
 				fas1 = 0;
 				fas2 = 1;
 			}else{
+				HAL_Delay(1000); //Good shit for debugging
 				for(int i = 0; i < 2; i++){
 					if(singleCommand[i] == 'f')
 						move(1);
 					else if(singleCommand[i] == 'l')
-						rotate(90);
+						rotate(leftAngle);
 					else if(singleCommand[i] == 'r')
-						rotate(-90);
+						rotate(rightAngle);
 					else if(singleCommand[i] == 'b')
 						rotate(180);
 					singleCommand[i] = 0; // Clear for next command
 				}
-				HAL_Delay(1000);
+				
 				wallDet();
 				s = (s+1)%2; // Used for verifying that the cell was recieved by rpi, this is never used
 				
@@ -255,9 +262,9 @@ int main(void)
 				if(command == 'f')
 					move(nrOfCommands);
 				else if(command == 'l')
-					rotate(90 * nrOfCommands);
+					rotate(leftAngle * nrOfCommands);
 				else if(command == 'r')
-					rotate(-90 * nrOfCommands);
+					rotate(rightAngle * nrOfCommands);
 				else if(command == 'b')
 					rotate(180 * nrOfCommands); 
 			}
@@ -300,9 +307,9 @@ int main(void)
 					if(command == 'f')
 						move(nrOfCommands);
 					else if(command == 'l')
-						rotate(90 * nrOfCommands);
+						rotate(leftAngle * nrOfCommands);
 					else if(command == 'r')
-						rotate(-90 * nrOfCommands);
+						rotate(rightAngle * nrOfCommands);
 					else if(command == 'b')
 						rotate(180 * nrOfCommands); 
 			}
@@ -821,7 +828,7 @@ static void MX_GPIO_Init(void)
 /* USER CODE BEGIN 4 */
 
 void move(int nrOfCells){
-	disableSensorAdjustment = 1; // Used for disabling sensor adjustment when rotating and standing still. Change name plz
+	disableSensorAdjustment = 0; // Used for disabling sensor adjustment when rotating and standing still. Change name plz
 	int totalDistance = nrOfCells * oneCellDistance;
 	distanceLeft = totalDistance;
 	targetSpeedW = 0; // No curve turns
@@ -833,10 +840,10 @@ void move(int nrOfCells){
 		else
 			targetSpeedX = 0;	
 	}
-	while( (encoderCount-oldEncoderCount) < (totalDistance) );
+	while( (encoderCount-oldEncoderCount) < (totalDistance) && calcDistances[1] > 4.8);
 //|| calcDistances[1] > frontSensorTreshhold
 	targetSpeedX = 0;	
-	disableSensorAdjustment = 0;
+	disableSensorAdjustment = 1;
 	
 	oldEncoderCount = encoderCount;
 }
