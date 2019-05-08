@@ -208,6 +208,7 @@ void SysTick_Handler(void)
 	Millis++;
 	
 	calcSensorDistances();
+	
 	if(enableControlLoop) //Only start the control if the button is pressed.
 		speedProfile();
 	
@@ -248,8 +249,6 @@ void DMA1_Channel1_IRQHandler(void)
 void EXTI9_5_IRQHandler(void)
 {
   /* USER CODE BEGIN EXTI9_5_IRQn 0 */
-
-	HAL_GPIO_TogglePin(LED3_GPIO_Port, LED3_Pin);
   /* USER CODE END EXTI9_5_IRQn 0 */
   HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_8);
   HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_9);
@@ -264,9 +263,9 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
 	if(GPIO_Pin == Btn_Front_Pin){
 		if(HAL_GPIO_ReadPin(Btn_Front_GPIO_Port, Btn_Front_Pin) == 0)
 			go = 1;
-			enableControlLoop = 1;
 	}else{
 		if(HAL_GPIO_ReadPin(Btn_Back_GPIO_Port, Btn_Back_Pin) == 1)
+			//HAL_UART_Transmit(&huart3, restart, 1, 100);
 			rot = 1;
 	}
 	

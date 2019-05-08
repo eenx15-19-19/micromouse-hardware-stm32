@@ -16,9 +16,10 @@ float leftSensorMiddleValue = 0;
 float rightSensorMiddleValue = 0;
 float sensorError = 0;
 float sensorFeedback = 0;;
-float sensorScale = 0.1;
+float sensorScale = 0.05;
 
-int rotating;
+//Used for disabling and enabling when the sensors should help guide the mouse and when not to. 
+int disableSensorAdjustment = 0;
 
 // Used for control loop
 int leftEncoder;
@@ -54,8 +55,8 @@ float oldPosErrorW = 0;
 int posPwmX = 0;
 int posPwmW = 0;
 float kpX = 2, kdX = 4;
-float kpW = 1, kdW = 12;//used in straight
-float accX = 100;// cm/s^2 => 0.1 m/s^2 
+float kpW = 1, kdW = 10;//used in straight
+float accX = 100; // 100 cm/s^2 => 1 m/s^2 
 float decX = 100; 
 float accW = 1; //cm/s^2
 float decW = 1;
@@ -167,9 +168,7 @@ void calculateMotorPwm(void) // Position and rotation PD controller
 	//Have sensor error properly scale to fit the system
 	sensorFeedback = sensorError / sensorScale; 
 	
-	sensorFeedback = 0; //REMOVE WHILE NOT DEBUGGING ----------------------------------------------------------------------------
-	
-	if(rotating)
+	if(disableSensorAdjustment)
 		sensorFeedback = 0;
 	
 	rotationalFeedback = encoderFeedbackW + sensorFeedback;

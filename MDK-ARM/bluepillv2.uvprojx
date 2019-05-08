@@ -427,6 +427,11 @@
               <FileType>1</FileType>
               <FilePath>../Src/stm32f1xx_hal_msp.c</FilePath>
             </File>
+            <File>
+              <FileName>com.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\com.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -561,6 +566,11 @@
               <FileName>distance.h</FileName>
               <FileType>5</FileType>
               <FilePath>..\Inc\distance.h</FilePath>
+            </File>
+            <File>
+              <FileName>com.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\Inc\com.h</FilePath>
             </File>
           </Files>
         </Group>

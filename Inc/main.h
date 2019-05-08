@@ -119,6 +119,8 @@ extern TIM_HandleTypeDef htim2;
 extern TIM_HandleTypeDef htim3;
 extern TIM_HandleTypeDef htim4;	
 
+extern UART_HandleTypeDef huart3;
+
 // To configure adc channel.
 extern ADC_ChannelConfTypeDef sConfig;
 
@@ -126,6 +128,10 @@ extern volatile int go;
 extern volatile int rot;
 extern volatile int enableControlLoop;
 extern uint32_t sensorValues[];
+
+// Single command to execute while searching the maze
+extern uint8_t restart[];
+extern uint8_t singleCommand[2];
 
 void move(int nrOfCells);
 void rotate(int degrees); // Positive is counter clockwise, negative is clockwise

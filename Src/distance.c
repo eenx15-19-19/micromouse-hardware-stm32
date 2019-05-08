@@ -3,7 +3,7 @@
 #include "adc.h"
 #include "motor_control.h"
 
-char wall[3];
+uint8_t walls[4] = "0111";
 float p1[3]={-5.579, -1.668, -3.89};
 float p2[3]={14720, 7745, 10370};
 float q1[3]={955.9, 13.31, 101.1};
@@ -18,30 +18,24 @@ void calcSensorDistances(void){
 }
 
 
-void wallDet(float raw_distance[], char walls[]){
+void wallDet(void){
 	// takes two arguments, the first a double array where the three sensors data is stored the second a char array where the walls are stored
-	calcSensorDistances();
-	if (raw_distance[1]+raw_distance[2]>8)
-	{
-		if (raw_distance[2]>8)
-			walls[2]=0;
-		else
-			walls[2]=1;
-		if (raw_distance[1]>8)
-			walls[1]=0;
-		else
-			walls[1]=1;
-	}
-	else
-	{
-		walls[1]=1;
-		walls[2]=1;
-	}
+	//calcSensorDistances();
 	
-	if (raw_distance[0]>8)
-		walls[0]=0;
+	if (calcDistances[0] > 8)
+		walls[2] = '0';
 	else
-		walls[0]=0;
+		walls[2] = '1';
+	if (calcDistances[2]>8)
+		walls[3] = '0';
+	else
+		walls[3] = '1';
+	if (calcDistances[1]>8)
+		walls[0] = '0';
+	else
+		walls[0] = '1';
+	
+	walls[1] = '0';
 }
 
 

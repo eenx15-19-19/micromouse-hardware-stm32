@@ -23,7 +23,7 @@ extern float rightSensorMiddleValue;
 extern float frontSensorTreshhold;
 extern float frontSensor;
 
-extern int rotating;
+extern int disableSensorAdjustment;
 
 // Needed for running in main
 extern float distanceLeft;

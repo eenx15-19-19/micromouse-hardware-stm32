@@ -47,6 +47,7 @@
 #include "motor_control.h"
 #include "adc.h"
 #include "distance.h"
+#include "com.h"
 
 /* USER CODE END Includes */
 
@@ -89,9 +90,22 @@ int turnSpeed;
 uint32_t sensorValues[3];
 
 //Uses as a command array for moving in the maze
-char commands[] = "frfrfrfrrrrr";
-char rightCommands[5] = "frfrr";
-char leftCommands[5] = "flfll";
+uint8_t pathToStart[189] = {0};
+uint8_t pathToGoal[189] = {0};
+uint8_t singleCommand[2]; //Used for search run
+
+uint8_t testCommand[2];
+
+uint8_t fas1;
+uint8_t fas2;
+uint8_t fas3;
+
+uint8_t restart[2] = "e\n";
+uint8_t fas1Str[5] = "fas1\n";
+uint8_t fas2Str[5] = "fas2\n";
+uint8_t fas3Str[5] = "fas3\n";
+
+uint8_t text[13] = "Hello world!\n";
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -163,7 +177,7 @@ int main(void)
   MX_USART3_UART_Init();
   /* USER CODE BEGIN 2 */
 	
-	// Start the DMA for the ADC reading the sensor values
+	// Start the DMA to continously read the ADC reading of the sensors.
 	HAL_ADC_Start_DMA(&hadc1, (uint32_t*) sensorValues, 3);
 	
 	calibrateSensors();
@@ -171,6 +185,12 @@ int main(void)
 	pwmSetup();
 	moveSpeed = speedToCounts(300*2);
 	turnSpeed = 30;
+	enableControlLoop = 1; //Start the control loop imidietly
+	
+	//HAL_UART_Transmit(&huart3, restart, 2, 100);
+	HAL_UART_Transmit(&huart3, fas1Str, 5, 100);
+	
+	fas1 = 1;
 	
   /* USER CODE END 2 */
 
@@ -181,11 +201,134 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+		while(fas1){
+			while(singleCommand[0] == 0){
+				sendWalls(walls);
+				HAL_UART_Receive(&huart3, singleCommand, 2, 1000);
+			}
+			if(singleCommand[0] == 's'){
+				fas1 = 0;
+				fas2 = 1;
+			}else{
+				for(int i = 0; i < 2; i++){
+					if(singleCommand[i] == 'f')
+						move(1);
+					else if(singleCommand[i] == 'l')
+						rotate(90);
+					else if(singleCommand[i] == 'r')
+						rotate(-90);
+					else if(singleCommand[i] == 'b')
+						rotate(180);
+					singleCommand[i] = 0; // Clear for next command
+				}
+				HAL_Delay(1000);
+				wallDet();
+				s = (s+1)%2; // Used for verifying that the cell was recieved by rpi, this is never used
+				
+			}	
+		}
+		
+		while(fas2){
+			while(pathToStart[0] == 0){
+				HAL_UART_Receive(&huart3, pathToStart, 189, 100);
+			}
+			
+			beep(150);
+			HAL_Delay(500);
+			beep(0);
+			
+			int pathSize = 189; //sizeof(path) / sizeof(path[0]);
+			
+			for(int i = 0; i < pathSize; i++){
+				uint8_t command = pathToStart[i];
+				int nrOfCommands = 1;
+				
+				for(int j = i+1; j < pathSize; j++){
+					if(pathToStart[j] == command){
+						nrOfCommands++;
+					}else{
+						i = j - 1; 
+						break;
+					}
+				}
+				
+				if(command == 'f')
+					move(nrOfCommands);
+				else if(command == 'l')
+					rotate(90 * nrOfCommands);
+				else if(command == 'r')
+					rotate(-90 * nrOfCommands);
+				else if(command == 'b')
+					rotate(180 * nrOfCommands); 
+			}
+			
+			fas2 = 0;
+			fas3 = 1;
+		} //while(fas2) ----   Mål -> Start
+		
+		while(fas3){
+			rotate(180);
+			beep(150);
+			HAL_Delay(500);
+			beep(0);
 
-		//printf("Encoder speed: %.2f m/s --- Battery voltage: %.2f \n\r", countsToSpeed(encoderChange) / 1000, batteryVoltage() );
-		//HAL_Delay(500);
-		//Let the user know if the battery is running low.
+			while(pathToGoal[0] == 0){
+				HAL_UART_Transmit(&huart3, fas3Str, 5, 100);
+				HAL_UART_Receive(&huart3, pathToGoal, 189, 100);
+			}
+			
+			while(!go); // Blocking and waiting for front button press
+			
+			if(go){
+				go = 0;
+				HAL_Delay(750);
+				int pathSize = 189; //sizeof(path) / sizeof(path[0]);
+			
+				for(int i = 0; i < pathSize; i++){
+					uint8_t command = pathToGoal[i];
+					int nrOfCommands = 1;
+					
+					for(int j = i+1; j < pathSize; j++){
+						if(pathToGoal[j] == command){
+							nrOfCommands++;
+						}else{
+							i = j - 1; 
+							break;
+						}
+					}
+				
+					if(command == 'f')
+						move(nrOfCommands);
+					else if(command == 'l')
+						rotate(90 * nrOfCommands);
+					else if(command == 'r')
+						rotate(-90 * nrOfCommands);
+					else if(command == 'b')
+						rotate(180 * nrOfCommands); 
+			}
+			}
+		}// while(fas3)
+		
+		
+		if(rot){
+			rot = 0;
+			
+			//Add movespeed and turnspeed to every press of backbutton
+			// The speed won't be seen if the acceleration and distance is too low since
+			// it can't even accelerate up to the moveSpeeed or turnSpeed before it has to slow down.
+			moveSpeed += speedToCounts(300*2);
+			turnSpeed += 30;
+			
+			
+			//accW = 10;
+		  //decW = 10;
+			
+			//accX = 400;
+			//decX = 400;
+		}
+		
 		/*
+		//OLD code for checking battery voltage, not used anymore.
 		if(battVoltage < 6.5){
 			HAL_GPIO_WritePin(LED3_GPIO_Port, LED3_Pin, GPIO_PIN_SET); //red
 			HAL_GPIO_WritePin(LED2_GPIO_Port, LED2_Pin, GPIO_PIN_RESET);//Green
@@ -195,72 +338,6 @@ int main(void)
 			HAL_GPIO_WritePin(LED2_GPIO_Port, LED2_Pin, GPIO_PIN_SET);//Green
 			beep(0);
 		}*/
-	
-		if(go){
-			HAL_Delay(750);
-			go = 0;
-		
-			int commandSize = sizeof(commands) / sizeof(commands[0]);
-			
-			for(int i = 0; i < commandSize; i++){
-				char command = commands[i];
-				int nrOfCommands = 1;
-				
-				for(int j = i+1; j < commandSize; j++){
-					if(commands[j] == command){
-						nrOfCommands++;
-					}else{
-						i = j - 1; 
-						break;
-					}
-					/*else if(j == commandSize - 1){
-						i = j;
-						break;
-					}*/
-				}
-				
-				if(command == 'f')
-					move(nrOfCommands);
-				else if(command == 'l')
-					rotate(90*nrOfCommands);
-				else if(command == 'r')
-					rotate(-90*nrOfCommands);
-				else if(command == 'b')
-					rotate(180*nrOfCommands
-				
-				); 
-			}
-			
-			
-			/*
-			for(int i = 0; i < commandSize; i++){ 
-				//We should also implement so that the fff => move(3) and not move(1), move(1), move(1)
-				char command = commands[i];
-				if(command == 'f')
-					move(3);
-				else if(command == 'l')
-					rotate(90);
-				else if(command == 'r')
-					rotate(-90);
-				else if(command == 'b')
-					rotate(180); // rotate counter clockwise
-			}
-			*/
-		}
-			
-		
-		if(rot){
-			HAL_Delay(750);
-			rot = 0;
-			
-			moveSpeed += speedToCounts(500*2);
-			turnSpeed += 60;
-			accW = 10;
-		  decW = 10;
-			accX = 400;
-			decX = 400;
-		}
-				
 		}
   /* USER CODE END 3 */
 }
@@ -744,6 +821,7 @@ static void MX_GPIO_Init(void)
 /* USER CODE BEGIN 4 */
 
 void move(int nrOfCells){
+	disableSensorAdjustment = 1; // Used for disabling sensor adjustment when rotating and standing still. Change name plz
 	int totalDistance = nrOfCells * oneCellDistance;
 	distanceLeft = totalDistance;
 	targetSpeedW = 0; // No curve turns
@@ -758,11 +836,12 @@ void move(int nrOfCells){
 	while( (encoderCount-oldEncoderCount) < (totalDistance) );
 //|| calcDistances[1] > frontSensorTreshhold
 	targetSpeedX = 0;	
+	disableSensorAdjustment = 0;
 	
 	oldEncoderCount = encoderCount;
 }
 void rotate(int degrees){
-	rotating = 1;
+	
 	int direction = 1;
 	int totalDistance = rotToCounts(degrees);
 	rotationLeft = totalDistance;
@@ -782,7 +861,6 @@ void rotate(int degrees){
 	}
 	while( direction * (rotationCount-oldRotationCount) < direction * totalDistance);
 	targetSpeedW = 0;	
-	rotating = 0;
 	
 	oldRotationCount = rotationCount;
 	// Perhaps oldRotationCount has to be overwritten in move also.

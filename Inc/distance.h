@@ -2,12 +2,12 @@
 #define DISTANCE_H
 
 #include "main.h"
-
+extern uint8_t walls[];
 extern float calcDistances[3];
 
 void calibrateSensors(void);
 void calcSensorDistances(void);
-void wallDet(float arr1[], char arr2[]);
+void wallDet(void);
 
 
 #endif
