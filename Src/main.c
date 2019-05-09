@@ -91,8 +91,8 @@ int turnSpeed;
 uint32_t sensorValues[3];
 
 //Uses as a command array for moving in the maze
-uint8_t pathToStart[189] = {0};
-uint8_t pathToGoal[189] = {0};
+uint8_t pathToStart[200] = {0};
+uint8_t pathToGoal[200] = {0};
 uint8_t singleCommand[2]; //Used for search run
 
 uint8_t testCommand[2];
@@ -109,8 +109,10 @@ uint8_t fas3Str[5] = "fas3\n";
 uint8_t text[13] = "Hello world!\n";
 
 // Rotating
-int rightAngle = -92;
-int leftAngle = 90;
+int rightAngle = -91;
+int leftAngle = 88;
+int halfAngle = 88 * 2;
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -192,9 +194,10 @@ int main(void)
 	turnSpeed = 30;
 	enableControlLoop = 1; //Start the control loop imidietly
 	
-	//HAL_UART_Transmit(&huart3, restart, 2, 100);
 	while(!start); // Wait for back button press
 	HAL_UART_Transmit(&huart3, fas1Str, 5, 100);
+	HAL_Delay(100);
+	sendWalls(walls);
 	
 	fas1 = 1;
 	
@@ -208,50 +211,51 @@ int main(void)
 
     /* USER CODE BEGIN 3 */
 		while(fas1){
-			while(singleCommand[0] == 0){
-				sendWalls(walls);
-				HAL_UART_Receive(&huart3, singleCommand, 2, 1000);
-			}
-			if(singleCommand[0] == 's'){
+			readLine(); //Read blocking until \n, also clears the buffer
+			
+			if(dataBufferUART[0] == 's'){
 				fas1 = 0;
 				fas2 = 1;
 			}else{
-				HAL_Delay(1000); //Good shit for debugging
+				//Indicate that we have recieved
+				beep(150);
+				HAL_Delay(300);
+				beep(0);
+				
+				//HAL_Delay(700); //Good for debugging, wait 1s before executing the recieved command.
+				
+				
+				//Go through 2 commands since it could be 1 or 2
 				for(int i = 0; i < 2; i++){
-					if(singleCommand[i] == 'f')
+					if(dataBufferUART[i] == 'f')
 						move(1);
-					else if(singleCommand[i] == 'l')
+					else if(dataBufferUART[i] == 'l')
 						rotate(leftAngle);
-					else if(singleCommand[i] == 'r')
+					else if(dataBufferUART[i] == 'r')
 						rotate(rightAngle);
-					else if(singleCommand[i] == 'b')
-						rotate(180);
-					singleCommand[i] = 0; // Clear for next command
+					else if(dataBufferUART[i] == 'b')
+						rotate(halfAngle);
 				}
-				
 				wallDet();
-				s = (s+1)%2; // Used for verifying that the cell was recieved by rpi, this is never used
-				
+				sendWalls(walls); //only send once
 			}	
 		}
 		
 		while(fas2){
-			while(pathToStart[0] == 0){
-				HAL_UART_Receive(&huart3, pathToStart, 189, 100);
-			}
+			readLine(); //Wait for entire pathToStart
 			
 			beep(150);
 			HAL_Delay(500);
 			beep(0);
 			
-			int pathSize = 189; //sizeof(path) / sizeof(path[0]);
+			int pathSize = 200; //sizeof(path) / sizeof(path[0]);
 			
 			for(int i = 0; i < pathSize; i++){
-				uint8_t command = pathToStart[i];
+				uint8_t command = dataBufferUART[i];
 				int nrOfCommands = 1;
 				
 				for(int j = i+1; j < pathSize; j++){
-					if(pathToStart[j] == command){
+					if(dataBufferUART[j] == command){
 						nrOfCommands++;
 					}else{
 						i = j - 1; 
@@ -266,57 +270,59 @@ int main(void)
 				else if(command == 'r')
 					rotate(rightAngle * nrOfCommands);
 				else if(command == 'b')
-					rotate(180 * nrOfCommands); 
+					rotate(halfAngle * nrOfCommands); 
 			}
+			
+			rotate(180);
+			beep(150);
+			HAL_Delay(500);
+			beep(0);
 			
 			fas2 = 0;
 			fas3 = 1;
 		} //while(fas2) ----   Mål -> Start
 		
 		while(fas3){
-			rotate(180);
-			beep(150);
-			HAL_Delay(500);
-			beep(0);
-
-			while(pathToGoal[0] == 0){
-				HAL_UART_Transmit(&huart3, fas3Str, 5, 100);
-				HAL_UART_Receive(&huart3, pathToGoal, 189, 100);
-			}
+			//Send "fas3" when the robot has returned home
+			HAL_UART_Transmit(&huart3, fas3Str, 5, 100);
 			
-			while(!go); // Blocking and waiting for front button press
+			readLine(); //Blocking read until pathToGoal is terminated with \n
 			
-			if(go){
-				go = 0;
-				HAL_Delay(750);
-				int pathSize = 189; //sizeof(path) / sizeof(path[0]);
+			while(1){ // Blocking and waiting for front button press
 			
-				for(int i = 0; i < pathSize; i++){
-					uint8_t command = pathToGoal[i];
-					int nrOfCommands = 1;
-					
-					for(int j = i+1; j < pathSize; j++){
-						if(pathToGoal[j] == command){
-							nrOfCommands++;
-						}else{
-							i = j - 1; 
-							break;
-						}
-					}
+				if(go){
+					go = 0;
+					HAL_Delay(750);
+					int pathSize = 200; //sizeof(path) / sizeof(path[0]);
 				
-					if(command == 'f')
-						move(nrOfCommands);
-					else if(command == 'l')
-						rotate(leftAngle * nrOfCommands);
-					else if(command == 'r')
-						rotate(rightAngle * nrOfCommands);
-					else if(command == 'b')
-						rotate(180 * nrOfCommands); 
-			}
-			}
+					for(int i = 0; i < pathSize; i++){
+						uint8_t command = dataBufferUART[i];
+						int nrOfCommands = 1;
+				
+						for(int j = i+1; j < pathSize; j++){
+							if(dataBufferUART[j] == command){
+								nrOfCommands++;
+							}else{
+								i = j - 1; 
+								break;
+							}
+						}
+				
+						if(command == 'f')
+							move(nrOfCommands);
+						else if(command == 'l')
+							rotate(leftAngle * nrOfCommands);
+						else if(command == 'r')
+							rotate(rightAngle * nrOfCommands);
+						else if(command == 'b')
+							rotate(halfAngle * nrOfCommands); 
+					} //for loop 
+				}// if(go)
+			}// whle(1)
 		}// while(fas3)
 		
 		
+		/*
 		if(rot){
 			rot = 0;
 			
@@ -333,6 +339,7 @@ int main(void)
 			//accX = 400;
 			//decX = 400;
 		}
+		*/
 		
 		/*
 		//OLD code for checking battery voltage, not used anymore.

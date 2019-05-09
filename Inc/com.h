@@ -4,12 +4,10 @@
 #include "main.h"
 
 extern uint8_t s;
+extern uint8_t dataBufferUART[200];
 
 void sendWalls(uint8_t wall[]);
-void receiveSingle(void);
-void receiveMulti(uint8_t map, UART_HandleTypeDef *uart);
-
-void recieveSingleCommand(void);
+void readLine(void);
 
 
 #endif

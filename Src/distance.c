@@ -26,11 +26,11 @@ void wallDet(void){
 		walls[2] = '0';
 	else
 		walls[2] = '1';
-	if (calcDistances[2]>8)
+	if (calcDistances[2] > 8)
 		walls[3] = '0';
 	else
 		walls[3] = '1';
-	if (calcDistances[1]>8)
+	if (calcDistances[1] > 10)
 		walls[0] = '0';
 	else
 		walls[0] = '1';

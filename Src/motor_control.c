@@ -16,7 +16,7 @@ float leftSensorMiddleValue = 0;
 float rightSensorMiddleValue = 0;
 float sensorError = 0;
 float sensorFeedback = 0;;
-float sensorScale = 0.05;
+float sensorScale = 0.1;
 
 //Used for disabling and enabling when the sensors should help guide the mouse and when not to. 
 int disableSensorAdjustment = 1;
@@ -58,10 +58,10 @@ float kpX = 2, kdX = 4;
 float kpW = 1, kdW = 10;//used in straight
 float accX = 200; // 100 cm/s^2 => 1 m/s^2 
 float decX = 200; 
-float accW = 1; //cm/s^2
-float decW = 1;
+float accW = 2; //cm/s^2
+float decW = 2;
 
-int oneCellDistance = distanceToCounts(180);
+int oneCellDistance = distanceToCounts(178);
 int quarterTurn = rotToCounts(90);
 
 void motorSetup(void){
@@ -206,9 +206,15 @@ void getSensorError(void){
 		
 	
 	if(leftSensor < leftSensorMiddleValue && rightSensor > rightSensorMiddleValue /*&& rightSensor < 10*/)
-		sensorError = leftSensorMiddleValue - leftSensor;
+		if(rightSensor > 8)
+			sensorError = leftSensorMiddleValue - leftSensor - 0.5;
+		else
+			sensorError = leftSensorMiddleValue - leftSensor;
 	else if(rightSensor < rightSensorMiddleValue && leftSensor > leftSensorMiddleValue /*&& leftSensor < 10*/)
-		sensorError = rightSensor - rightSensorMiddleValue;
+		if(leftSensor > 8)
+			sensorError = rightSensor - rightSensorMiddleValue;
+		else
+			sensorError = rightSensor - rightSensorMiddleValue - 0.5;
 	else
 		sensorError = 0;
 }
