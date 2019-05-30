@@ -287,6 +287,7 @@ int main(void)
 			HAL_UART_Transmit(&huart3, fas3Str, 5, 100);
 			
 			readLine(); //Blocking read until pathToGoal is terminated with \n
+			moveSpeed = speedToCounts(600*2);
 			
 			while(1){ // Blocking and waiting for front button press
 			
